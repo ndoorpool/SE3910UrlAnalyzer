@@ -1,26 +1,33 @@
 package com.example.demo.service;
 import com.example.demo.domain.Url;
+import com.example.demo.repository.UrlRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+@AllArgsConstructor
 @Service
 public class UrlAnalysisService {
+
+    private final UrlRepository urlRepository;
+
+    public Map<String, Object> analyzeUrlById(Long url_id) {
+        Optional<Url> url = urlRepository.findById(url_id);
+
+        return analyzeUrl(url.get().getUrl());
+    }
 
     public Map<String, Object> analyzeUrl(String url){
 
         try{
-
             if(!isValidUrl(url)){
                 return Map.of("error", "Invalid URL format");
-
             }
+
             //retrieve the response code for the URL
             URL url1 = new URL(url);
             HttpURLConnection connection = (HttpURLConnection) url1.openConnection();
@@ -33,13 +40,14 @@ public class UrlAnalysisService {
 
             //ssl info
             String protocol = connection.getURL().getProtocol();
-            String cipher = connection.getURL().getHost();
+            //this isn't how you obtain SSL cipher info
+//            String cipher = connection.getURL().getHost();
 
             return Map.of(
                     "responseCode", responseCode,
                     "responseHeader", headers,
-                    "protocol", protocol,
-                    "cipher", cipher
+                    "protocol", protocol
+//                    "cipher", cipher
             );
 
         }
