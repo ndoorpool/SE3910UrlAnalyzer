@@ -3,6 +3,8 @@ import com.example.demo.domain.Url;
 import com.example.demo.repository.UrlRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import javax.net.ssl.HttpsURLConnection;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
@@ -28,7 +30,7 @@ public class UrlAnalysisService {
                 return Map.of("error", "Invalid URL format");
             }
 
-            //retrieve the response code for the URL
+            //response code
             URL url1 = new URL(url);
             HttpURLConnection connection = (HttpURLConnection) url1.openConnection();
             connection.setRequestMethod("GET");
@@ -38,16 +40,19 @@ public class UrlAnalysisService {
             //retrieve the response headers
             Map<String, List<String>> headers = connection.getHeaderFields();
 
+            //cipher info
+            HttpsURLConnection httpsURLConnection = (HttpsURLConnection) connection;
+            String cipher = null;
+            cipher = httpsURLConnection.getCipherSuite();
+
             //ssl info
             String protocol = connection.getURL().getProtocol();
-            //this isn't how you obtain SSL cipher info
-//            String cipher = connection.getURL().getHost();
 
             return Map.of(
                     "responseCode", responseCode,
                     "responseHeader", headers,
-                    "protocol", protocol
-//                    "cipher", cipher
+                    "protocol", protocol,
+                    "cipher", cipher
             );
 
         }
@@ -58,6 +63,6 @@ public class UrlAnalysisService {
 
     //making sure the URL inputted in the front end is valid
     private boolean isValidUrl(String url) {
-        return url != null && url.matches("^(ftp|http|https):\\/\\/[^\\s/$.?#].[^\\s]*$");
+        return url != null && url.matches("^(ftp|http|https):\\/\\/[^\\s/$.?#].\\S*$");
     }
 }
